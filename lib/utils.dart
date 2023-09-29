@@ -2,14 +2,15 @@ import 'package:intl/intl.dart';
 
 class Utils {
   static final List<String> day = [
-    'Monday',
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    'Friday',
-    'Saturday',
-    'Sunday'
+    'Mon',
+    "Tue",
+    "Wed",
+    "Thu",
+    'Fri',
+    'Sat',
+    'Sun'
   ];
+
   static final _timeFormat = DateFormat.Hm();
   static final _monthDayFormat = DateFormat.MMMd();
   static final _format = DateFormat.yMMMMd();

@@ -2,8 +2,11 @@ import 'package:finance/lite/transaction.impl.dart';
 import 'package:finance/model/solde.model.dart';
 import 'package:finance/model/transaction.model.dart';
 import 'package:finance/notifier.dart';
+import 'package:finance/page/transaction.add.dart';
 import 'package:finance/utils.dart';
+import 'package:finance/widgets/menu.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gravatar/flutter_gravatar.dart';
 
 import '../colory.dart';
 
@@ -18,7 +21,7 @@ class _HomeState extends State<Home> {
   final transactionService = TransactionImpl();
   late List<Transaction> _transactions;
   late ScrollController _scrollController;
-
+  Gravatar? _gravatar;
   late List<Solde> soldes;
 
   late Solde depense;
@@ -32,8 +35,60 @@ class _HomeState extends State<Home> {
   late bool _preventCall;
 
   @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Finax',
+            style: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 16,
+                color: Colors.white)),
+        foregroundColor: Colors.white,
+        backgroundColor: Colory.greenLight,
+      ),
+      drawer: Drawer(
+        child: _gravatar == null
+            ? Container()
+            : DrawerMenu(
+                gravatarUrl: _gravatar!.imageUrl(),
+              ),
+      ),
+      floatingActionButton: FloatingActionButton(
+          backgroundColor: Colory.greenLight,
+          foregroundColor: Colors.white,
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => const Add(),
+              )),
+          child: const Icon(Icons.add)),
+      body: SafeArea(
+          child: ValueListenableBuilder(
+              valueListenable: Notifier.valueNotifier,
+              builder: (context, values, child) {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 220, child: _head()),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15.0),
+                      child: Text('Transactions History',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 19,
+                              color: Colors.black)),
+                    ),
+                    Expanded(child: buildListTransaction()),
+                  ],
+                );
+              })),
+    );
+  }
+
+  @override
   void initState() {
     super.initState();
+
+    _gravatar = Gravatar('lyve.diallo@gmail.com');
     entree = Solde(nature: '', amount: 0);
     depense = Solde(nature: '', amount: 0);
 
@@ -104,24 +159,6 @@ class _HomeState extends State<Home> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-          child: ValueListenableBuilder(
-              valueListenable: Notifier.valueNotifier,
-              builder: (context, values, child) {
-                return Column(
-                  children: [
-                    SizedBox(height: 300, child: _head()),
-                    Expanded(child: buildListTransaction()),
-                    if (_preventCall) const CircularProgressIndicator()
-                  ],
-                );
-              })),
-    );
-  }
-
   Widget buildListTransaction() {
     if (_transactions.isEmpty) {
       if (_loading) {
@@ -159,17 +196,23 @@ class _HomeState extends State<Home> {
                 size: 20,
               ),
       ),
-      title: Text(
-        transaction.category!,
-        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '${Utils.getCurrencyFormat(transaction.amount)}',
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: transaction.nature == 'DEPENSE'
+                    ? Colors.red
+                    : Colors.green),
+          ),
+          Text(Utils.getDate(transaction.createdAt!)),
+        ],
       ),
-      subtitle: Text(Utils.getDate(transaction.createdAt!)),
-      trailing: Text(
-        '${Utils.getCurrencyFormat(transaction.amount)}',
-        style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: transaction.nature == 'DEPENSE' ? Colors.red : Colors.green),
+      subtitle: Text(
+        transaction.description!,
       ),
     );
   }
@@ -182,44 +225,20 @@ class _HomeState extends State<Home> {
           children: [
             Container(
               width: double.infinity,
-              height: 200,
+              height: 100,
               decoration: const BoxDecoration(
                   color: Colory.greenLight,
                   borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(20),
                       bottomRight: Radius.circular(20))),
               child: const Stack(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: 35, left: 10, right: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Good afternoon',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 16,
-                                    color: Color.fromARGB(255, 224, 223, 223))),
-                            Text('Diallo Mamadou',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 20,
-                                    color: Colors.white)),
-                          ],
-                        ),
-                      ],
-                    ),
-                  )
-                ],
+                children: [],
               ),
             ),
           ],
         ),
         Positioned(
-          top: 120,
+          top: 20,
           child: Container(
             height: 170,
             width: 320,

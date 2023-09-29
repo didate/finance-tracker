@@ -24,13 +24,37 @@ class _CategoriesState extends State<Categories> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Categories',
+            style: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 16,
+                color: Colors.white)),
+        foregroundColor: Colors.white,
+        backgroundColor: Colory.greenLight,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        backgroundColor: Colory.greenLight,
+        foregroundColor: Colors.white,
+        onPressed: () => showDialog(
+          context: context,
+          builder: (context) {
+            return showForm();
+          },
+        ),
+      ),
       body: SafeArea(
           child: Stack(
         alignment: Alignment.center,
         children: [
           _head(),
           Positioned(
-              top: 120,
+              top: 20,
               child: Container(
                 height: 550,
                 width: 340,
@@ -64,58 +88,12 @@ class _CategoriesState extends State<Categories> {
       children: [
         Container(
           width: double.infinity,
-          height: 240,
+          height: 100,
           decoration: const BoxDecoration(
               color: Colory.greenLight,
               borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20))),
-          child: Column(
-            children: [
-              const SizedBox(
-                height: 40,
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const Text(
-                      'Categories',
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white),
-                    ),
-                    TextButton(
-                      child: const Icon(
-                        Icons.add,
-                        color: Colors.white,
-                      ),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return showForm();
-                          },
-                        );
-                      },
-                    )
-                  ],
-                ),
-              ),
-            ],
-          ),
         ),
       ],
     );

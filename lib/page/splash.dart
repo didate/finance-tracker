@@ -29,7 +29,7 @@ class _SplashState extends State<Splash> {
     final session = supabase.auth.currentSession;
     if (session != null) {
       Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const Bottom()));
+          MaterialPageRoute(builder: (context) => const Home()));
     } else {
       Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const SignIn()));

@@ -1,3 +1,4 @@
+import 'package:finance/colory.dart';
 import 'package:finance/data/top.dart';
 import 'package:finance/data/utility.dart';
 import 'package:finance/widgets/chart.dart';
@@ -12,15 +13,7 @@ class Statistics extends StatefulWidget {
 
 class _StatisticsState extends State<Statistics> {
   List periodType = ['Day', 'Week', 'Month', 'Year'];
-  final List<dynamic> day = [
-    'Monday',
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    'friday',
-    'saturday',
-    'sunday'
-  ];
+  final List<dynamic> day = ['Mon', "Tue", "Wed", "Thu", 'Fri', 'Sat', 'Sun'];
   List f = [];
 
   int indexColor = 0;
@@ -28,6 +21,19 @@ class _StatisticsState extends State<Statistics> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Statistics',
+            style: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 16,
+                color: Colors.white)),
+        foregroundColor: Colors.white,
+        backgroundColor: Colory.greenLight,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SafeArea(
           child: ValueListenableBuilder(
         builder: (context, dynamic value, child) {
@@ -44,16 +50,6 @@ class _StatisticsState extends State<Statistics> {
         SliverToBoxAdapter(
           child: Column(
             children: [
-              const SizedBox(
-                height: 20,
-              ),
-              const Text(
-                'Statistics',
-                style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700),
-              ),
               const SizedBox(
                 height: 20,
               ),

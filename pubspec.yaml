@@ -43,6 +43,7 @@ dependencies:
   sqflite: ^2.3.0
   path_provider: ^2.1.1
   supabase_flutter: ^1.10.3
+  flutter_gravatar: ^2.0.2
 
 dev_dependencies:
   flutter_test:
