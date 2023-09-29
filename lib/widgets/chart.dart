@@ -1,5 +1,4 @@
-import 'package:finance/data/utility.dart';
-import 'package:finance/model/add.dart';
+import 'package:finance/colory.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
@@ -13,7 +12,6 @@ class Chart extends StatefulWidget {
 }
 
 class _ChartState extends State<Chart> {
-  List<AddData>? a;
   bool b = true;
   bool j = true;
 
@@ -21,23 +19,18 @@ class _ChartState extends State<Chart> {
   Widget build(BuildContext context) {
     switch (widget.index) {
       case 0:
-        a = today();
         b = true;
         j = true;
         break;
       case 1:
-        a = week();
         b = false;
         j = true;
         break;
       case 2:
-        a = month();
         b = false;
         j = true;
         break;
       case 3:
-        a = year();
-
         j = false;
         break;
       default:
@@ -50,27 +43,9 @@ class _ChartState extends State<Chart> {
           primaryXAxis: CategoryAxis(),
           series: <SplineSeries<SalesData, String>>[
             SplineSeries<SalesData, String>(
-              color: const Color.fromARGB(255, 47, 125, 121),
+              color: Colory.greendark,
               width: 3,
-              dataSource: <SalesData>[
-                ...List.generate(time(a!, b ? true : false).length, (index) {
-                  return SalesData(
-                      j
-                          ? b
-                              ? a![index].datetime.hour.toString()
-                              : a![index].datetime.day.toString()
-                          : a![index].datetime.month.toString(),
-                      b
-                          ? index > 0
-                              ? time(a!, true)[index] +
-                                  time(a!, true)[index - 1]
-                              : time(a!, true)[index]
-                          : index > 0
-                              ? time(a!, false)[index] +
-                                  time(a!, false)[index - 1]
-                              : time(a!, false)[index]);
-                })
-              ],
+              dataSource: const <SalesData>[],
               xValueMapper: (SalesData sales, _) => sales.year,
               yValueMapper: (SalesData sales, _) => sales.sales,
             )

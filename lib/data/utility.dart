@@ -1,4 +1,4 @@
-import 'package:finance/model/add.dart';
+/* import 'package:finance/model/add.dart';
 import 'package:hive/hive.dart';
 
 int totals = 0;
@@ -122,3 +122,4 @@ List time(List<AddData> history2, bool hour) {
   }
   return total;
 }
+ */

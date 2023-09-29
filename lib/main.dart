@@ -1,15 +1,16 @@
-import 'package:finance/model/add.dart';
-import 'package:finance/page/home.dart';
-import 'package:finance/page/statistics.dart';
-import 'package:finance/widgets/bottomnavigationbar.dart';
+import 'package:finance/config.dart';
+import 'package:finance/page/splash.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'colory.dart';
 
 void main() async {
-  await Hive.initFlutter();
-  Hive.registerAdapter(AddAdapter());
-  await Hive.openBox<AddData>('data');
+  await Supabase.initialize(
+      url: Config.supabaseUrl,
+      anonKey: Config.supabaseAnnoKey,
+      authFlowType: AuthFlowType.pkce);
+
   runApp(const MyApp());
 }
 
@@ -19,12 +20,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Finax',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colory.greenLight),
         useMaterial3: true,
       ),
-      home: const Bottom(),
+      home: const Splash(),
     );
   }
 }

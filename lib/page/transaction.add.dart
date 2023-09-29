@@ -1,6 +1,13 @@
-import 'package:finance/model/add.dart';
+import 'package:finance/config.dart';
+import 'package:finance/lite/category.impl.dart';
+import 'package:finance/lite/transaction.impl.dart';
+import 'package:finance/model/category.model.dart';
+import 'package:finance/model/transaction.model.dart';
+import 'package:finance/notifier.dart';
+import 'package:finance/service/transaction.service.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+
+import '../colory.dart';
 
 class Add extends StatefulWidget {
   const Add({super.key});
@@ -10,36 +17,47 @@ class Add extends StatefulWidget {
 }
 
 class _AddState extends State<Add> {
-  final box = Hive.box<AddData>('data');
-  final TextEditingController explainCtrl = TextEditingController();
+  final TextEditingController motifCtrl = TextEditingController();
   FocusNode ex = FocusNode();
 
   final TextEditingController amountCtrl = TextEditingController();
   FocusNode amount = FocusNode();
 
   DateTime date = DateTime.now();
-  String? selectedItem;
-  String? selectedItemi;
-  final List<String> _item = [
-    'food',
-    'transfer',
-    'transportation',
-    'education',
+  Category? selectedCategory;
+  String? selectedNature;
+
+  final List<String> nature = [
+    'ENTREE',
+    'DEPENSE',
   ];
 
-  final List<String> _itemi = [
-    'Income',
-    'Expand',
-  ];
+  bool _loadingMetaData = false;
+  bool _saving = false;
+
+  List<Category> categories = [];
+
+  TransactionService transactionService = TransactionImpl();
 
   @override
   void initState() {
     super.initState();
-    ex.addListener(() {
-      setState(() {});
+    _loadMetaData();
+  }
+
+  final categoryService = CategoryImpl();
+
+  Future<List<Category>> getCategories() async {
+    return await categoryService.findAll();
+  }
+
+  _loadMetaData() async {
+    setState(() {
+      _loadingMetaData = true;
     });
-    amount.addListener(() {
-      setState(() {});
+    categories = await getCategories();
+    setState(() {
+      _loadingMetaData = false;
     });
   }
 
@@ -72,24 +90,30 @@ class _AddState extends State<Add> {
           const SizedBox(
             height: 50,
           ),
-          nameField(),
+          natureField(),
           const SizedBox(
             height: 30,
           ),
-          explainField(),
-          const SizedBox(
-            height: 30,
-          ),
+          selectedNature == 'DEPENSE'
+              ? Column(
+                  children: [
+                    categoryField(),
+                    const SizedBox(
+                      height: 30,
+                    ),
+                  ],
+                )
+              : Container(),
           amountField(),
           const SizedBox(
             height: 30,
           ),
-          how(),
+          motifField(),
           const SizedBox(
             height: 30,
           ),
-          dateTime(),
-          const Spacer(),
+          /*  dateTime(),
+          const Spacer(), */
           save(),
           const SizedBox(
             height: 30,
@@ -101,32 +125,46 @@ class _AddState extends State<Add> {
 
   GestureDetector save() {
     return GestureDetector(
-      onTap: () {
-        var add = AddData(
-            name: selectedItem!,
-            explain: explainCtrl.text,
-            amount: amountCtrl.text,
-            IN: selectedItemi!,
-            datetime: date);
+      onTap: () async {
+        setState(() {
+          _saving = true;
+        });
+        var transaction = Transaction(
+            amount: int.parse(amountCtrl.text),
+            categoryId: selectedNature == 'DEPENSE'
+                ? selectedCategory?.id
+                : Config.incomeCategoryId,
+            nature: selectedNature!,
+            description: motifCtrl.text,
+            version: 1);
+        transaction = await transactionService.save(transaction);
 
-        box.add(add);
+        setState(() {
+          _saving = false;
+        });
+        // Notifier.insert(transaction);
+
+        Notifier.increment();
         Navigator.of(context).pop();
       },
-      child: Container(
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15), color: Color(0xff368983)),
-        width: 120,
-        height: 50,
-        child: Text(
-          'Save',
-          style: TextStyle(
-              fontFamily: 'f',
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.white),
-        ),
-      ),
+      child: _saving
+          ? CircularProgressIndicator()
+          : Container(
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: Colory.greenLight),
+              width: 120,
+              height: 50,
+              child: const Text(
+                'Save',
+                style: TextStyle(
+                    fontFamily: 'f',
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white),
+              ),
+            ),
     );
   }
 
@@ -135,7 +173,7 @@ class _AddState extends State<Add> {
       alignment: Alignment.bottomLeft,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(width: 2, color: Color(0xffC5C5C5)),
+        border: Border.all(width: 2, color: const Color(0xffC5C5C5)),
       ),
       width: 300,
       child: TextButton(
@@ -152,39 +190,37 @@ class _AddState extends State<Add> {
         },
         child: Text(
           'Date : ${date.year}/${date.month}/${date.day}',
-          style: TextStyle(fontSize: 15, color: Colors.black),
+          style: const TextStyle(fontSize: 15, color: Colors.black),
         ),
       ),
     );
   }
 
-  Padding how() {
+  Padding natureField() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15.0),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 15),
         width: 300,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(width: 2, color: Color(0xffC5C5C5))),
+            border: Border.all(width: 2, color: const Color(0xffC5C5C5))),
         child: DropdownButton<String>(
-          value: selectedItemi,
-          items: _itemi
+          value: selectedNature,
+          items: nature
               .map((e) => DropdownMenuItem(
-                    child: Container(
-                      child: Row(
-                        children: [
-                          Text(
-                            '${e[0].toUpperCase()}${e.substring(1).toLowerCase()}',
-                            style: TextStyle(fontSize: 18),
-                          )
-                        ],
-                      ),
-                    ),
                     value: e,
+                    child: Row(
+                      children: [
+                        Text(
+                          '${e[0].toUpperCase()}${e.substring(1).toLowerCase()}',
+                          style: const TextStyle(fontSize: 18),
+                        )
+                      ],
+                    ),
                   ))
               .toList(),
-          selectedItemBuilder: (context) => _itemi
+          selectedItemBuilder: (context) => nature
               .map((e) => Row(
                     children: [
                       Text(
@@ -193,7 +229,7 @@ class _AddState extends State<Add> {
                     ],
                   ))
               .toList(),
-          hint: Text(
+          hint: const Text(
             'Name',
             style: TextStyle(color: Colors.grey),
           ),
@@ -202,7 +238,7 @@ class _AddState extends State<Add> {
           underline: Container(),
           onChanged: (value) {
             setState(() {
-              selectedItemi = value;
+              selectedNature = value;
             });
           },
         ),
@@ -218,8 +254,9 @@ class _AddState extends State<Add> {
         focusNode: amount,
         controller: amountCtrl,
         decoration: InputDecoration(
-            contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-            labelText: 'amount',
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            labelText: 'Amount',
             labelStyle: TextStyle(fontSize: 17, color: Colors.grey.shade500),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -228,20 +265,21 @@ class _AddState extends State<Add> {
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide:
-                    const BorderSide(width: 2, color: Color(0xff368983)))),
+                    const BorderSide(width: 2, color: Colory.greenLight))),
       ),
     );
   }
 
-  Padding explainField() {
+  Padding motifField() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15.0),
       child: TextField(
         focusNode: ex,
-        controller: explainCtrl,
+        controller: motifCtrl,
         decoration: InputDecoration(
-            contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-            labelText: 'explain',
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            labelText: 'Reason',
             labelStyle: TextStyle(fontSize: 17, color: Colors.grey.shade500),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -250,62 +288,33 @@ class _AddState extends State<Add> {
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide:
-                    const BorderSide(width: 2, color: Color(0xff368983)))),
+                    const BorderSide(width: 2, color: Colory.greenLight))),
       ),
     );
   }
 
-  Padding nameField() {
+  Padding categoryField() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15.0),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 15),
         width: 300,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(width: 2, color: Color(0xffC5C5C5))),
-        child: DropdownButton<String>(
-          value: selectedItem,
-          items: _item
+            border: Border.all(width: 2, color: const Color(0xffC5C5C5))),
+        child: DropdownButton<Category>(
+          value: selectedCategory,
+          items: categories
               .map((e) => DropdownMenuItem(
-                    child: Container(
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            child: Image.asset('images/${e}.png'),
-                          ),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          Text(
-                            '${e[0].toUpperCase()}${e.substring(1).toLowerCase()}',
-                            style: TextStyle(fontSize: 18),
-                          )
-                        ],
-                      ),
-                    ),
                     value: e,
+                    child: Text(
+                      e.libelle,
+                      style: const TextStyle(fontSize: 18),
+                    ),
                   ))
               .toList(),
-          selectedItemBuilder: (context) => _item
-              .map((e) => Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        child: Image.asset('images/${e}.png'),
-                      ),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      Text(
-                        '${e[0].toUpperCase()}${e.substring(1).toLowerCase()}',
-                      )
-                    ],
-                  ))
-              .toList(),
-          hint: Text(
-            'Name',
+          hint: const Text(
+            'Category',
             style: TextStyle(color: Colors.grey),
           ),
           dropdownColor: Colors.white,
@@ -313,7 +322,7 @@ class _AddState extends State<Add> {
           underline: Container(),
           onChanged: (value) {
             setState(() {
-              selectedItem = value;
+              selectedCategory = value;
             });
           },
         ),
@@ -327,13 +336,13 @@ class _AddState extends State<Add> {
         Container(
           width: double.infinity,
           height: 240,
-          decoration: BoxDecoration(
-              color: Color(0xff368983),
+          decoration: const BoxDecoration(
+              color: Colory.greenLight,
               borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20))),
           child: Column(children: [
-            SizedBox(
+            const SizedBox(
               height: 40,
             ),
             Padding(
@@ -346,19 +355,19 @@ class _AddState extends State<Add> {
                     onTap: () {
                       Navigator.of(context).pop();
                     },
-                    child: Icon(
+                    child: const Icon(
                       Icons.arrow_back,
                       color: Colors.white,
                     ),
                   ),
-                  Text(
+                  const Text(
                     'Adding',
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                         color: Colors.white),
                   ),
-                  Icon(
+                  const Icon(
                     Icons.attach_file_outlined,
                     color: Colors.white,
                   )

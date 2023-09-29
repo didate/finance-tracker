@@ -1,9 +1,11 @@
-import 'package:finance/data/listdata.dart';
-import 'package:finance/data/utility.dart';
-import 'package:finance/model/add.dart';
+import 'package:finance/lite/transaction.impl.dart';
+import 'package:finance/model/solde.model.dart';
+import 'package:finance/model/transaction.model.dart';
+import 'package:finance/notifier.dart';
+import 'package:finance/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+
+import '../colory.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -13,91 +15,161 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  var history;
-  final box = Hive.box<AddData>('data');
-  final List<String> day = [
-    'Monday',
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    'friday',
-    'saturday',
-    'sunday'
-  ];
+  final transactionService = TransactionImpl();
+  late List<Transaction> _transactions;
+  late ScrollController _scrollController;
+
+  late List<Solde> soldes;
+
+  late Solde depense;
+  late Solde entree;
+
+  late int _pageNumber;
+  final int _numberOfPostsPerRequest = 50;
+  late bool _error;
+  late bool _isLastPage;
+  late bool _loading;
+  late bool _preventCall;
+
+  @override
+  void initState() {
+    super.initState();
+    entree = Solde(nature: '', amount: 0);
+    depense = Solde(nature: '', amount: 0);
+
+    _pageNumber = 1;
+    _transactions = [];
+    _loading = true;
+    _error = false;
+    _isLastPage = false;
+    _preventCall = false;
+    _scrollController = ScrollController();
+
+    _scrollController.addListener(() {
+      // nextPageTrigger will have a value equivalent to 80% of the list size.
+      var nextPageTrigger = 0.8 * _scrollController.position.maxScrollExtent;
+      // _scrollController fetches the next paginated data when the current postion of the user on the screen has surpassed
+      if (_scrollController.position.pixels > nextPageTrigger) {
+        if (!_preventCall) {
+          _loading = true;
+          getTransactions();
+          setState(() {
+            _preventCall = true;
+          });
+        }
+      }
+    });
+
+    Notifier.valueNotifier.addListener(
+      () {
+        print("notifier");
+        getTransactions();
+      },
+    );
+
+    getSolde();
+
+    getTransactions();
+  }
+
+  void getSolde() async {
+    try {
+      soldes = await transactionService.getSolde();
+      setState(() {
+        depense = soldes.firstWhere((element) => element.nature == 'DEPENSE');
+        entree = soldes.firstWhere((element) => element.nature == 'ENTREE');
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void getTransactions() async {
+    try {
+      print('getTran');
+      final operations = await transactionService.findAll(_pageNumber);
+      setState(() {
+        _isLastPage = _transactions.length < _numberOfPostsPerRequest;
+        _loading = false;
+        _pageNumber = _pageNumber + 1;
+        _transactions.addAll(operations);
+        // Notifier.add(operations);
+        _preventCall = false;
+      });
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _error = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
           child: ValueListenableBuilder(
-        valueListenable: box.listenable(),
-        builder: (context, value, child) {
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: SizedBox(height: 340, child: _head()),
-              ),
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 15),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Transactions History',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 19,
-                              color: Colors.black)),
-                      Text('See all',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                              color: Colors.grey)),
-                    ],
-                  ),
-                ),
-              ),
-              SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                history = today()[index];
-                return getList(history, index);
-              }, childCount: today().length))
-            ],
-          );
-        },
-      )),
+              valueListenable: Notifier.valueNotifier,
+              builder: (context, values, child) {
+                return Column(
+                  children: [
+                    SizedBox(height: 300, child: _head()),
+                    Expanded(child: buildListTransaction()),
+                    if (_preventCall) const CircularProgressIndicator()
+                  ],
+                );
+              })),
     );
   }
 
-  Widget getList(AddData history, int index) {
-    return Dismissible(
-        key: UniqueKey(),
-        onDismissed: (direction) => history.delete(),
-        child: get(index, history));
+  Widget buildListTransaction() {
+    if (_transactions.isEmpty) {
+      if (_loading) {
+        return const Center(
+            child: Padding(
+          padding: EdgeInsets.all(8),
+          child: CircularProgressIndicator(),
+        ));
+      } else if (_error) {
+        return Center(child: errorDialog(size: 20));
+      }
+    }
+    return ListView.builder(
+        controller: _scrollController,
+        itemCount: _transactions.length, //+ (_isLastPage ? 0 : 1),
+        itemBuilder: (context, index) {
+          final transaction = _transactions[index];
+          return get(transaction);
+        });
   }
 
-  ListTile get(int index, AddData history) {
+  ListTile get(Transaction transaction) {
     return ListTile(
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(5),
-        child: Image.asset(
-          'images/${history.name}.png',
-          height: 40,
-        ),
+        child: transaction.nature == 'ENTREE'
+            ? const Icon(
+                Icons.call_received,
+                color: Colors.green,
+                size: 20,
+              )
+            : const Icon(
+                Icons.call_made,
+                color: Colors.red,
+                size: 20,
+              ),
       ),
       title: Text(
-        history.name,
-        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+        transaction.category!,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
       ),
-      subtitle: Text(
-        '${day[history.datetime.weekday - 1]} ${history.datetime.month}/${history.datetime.day}',
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
+      subtitle: Text(Utils.getDate(transaction.createdAt!)),
       trailing: Text(
-        '\$ ${history.amount}',
+        '${Utils.getCurrencyFormat(transaction.amount)}',
         style: TextStyle(
-            fontSize: 19,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: history.IN == 'Income' ? Colors.red : Colors.green),
+            color: transaction.nature == 'DEPENSE' ? Colors.red : Colors.green),
       ),
     );
   }
@@ -112,18 +184,18 @@ class _HomeState extends State<Home> {
               width: double.infinity,
               height: 200,
               decoration: const BoxDecoration(
-                  color: Color(0xff368983),
+                  color: Colory.greenLight,
                   borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(20),
                       bottomRight: Radius.circular(20))),
-              child: Stack(
+              child: const Stack(
                 children: [
                   Padding(
                     padding: EdgeInsets.only(top: 35, left: 10, right: 10),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Column(
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Good afternoon',
@@ -136,23 +208,6 @@ class _HomeState extends State<Home> {
                                     fontWeight: FontWeight.w600,
                                     fontSize: 20,
                                     color: Colors.white)),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(7),
-                              child: Container(
-                                height: 40,
-                                width: 40,
-                                color: const Color.fromRGBO(250, 250, 250, 0.1),
-                                child: const Icon(
-                                  Icons.notification_add_outlined,
-                                  size: 30,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                       ],
@@ -177,10 +232,10 @@ class _HomeState extends State<Home> {
                     spreadRadius: 6,
                   )
                 ],
-                color: const Color.fromARGB(255, 47, 125, 121),
+                color: Colory.greendark,
                 borderRadius: BorderRadius.circular(15)),
             child: Column(children: [
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               const Padding(
@@ -204,10 +259,11 @@ class _HomeState extends State<Home> {
                 height: 7,
               ),
               Padding(
-                padding: EdgeInsets.only(left: 15.0),
+                padding: const EdgeInsets.only(left: 15.0),
                 child: Row(
                   children: [
-                    Text('\$ ${total()}',
+                    Text(
+                        '${Utils.getCurrencyFormat(entree.amount - depense.amount)}',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 25,
@@ -215,7 +271,7 @@ class _HomeState extends State<Home> {
                   ],
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 25,
               ),
               const Padding(
@@ -229,7 +285,7 @@ class _HomeState extends State<Home> {
                           radius: 13,
                           backgroundColor: Color.fromARGB(255, 85, 145, 141),
                           child: Icon(
-                            Icons.arrow_downward,
+                            Icons.call_received,
                             color: Colors.white,
                             size: 19,
                           ),
@@ -250,7 +306,7 @@ class _HomeState extends State<Home> {
                           radius: 13,
                           backgroundColor: Color.fromARGB(255, 85, 145, 141),
                           child: Icon(
-                            Icons.arrow_upward,
+                            Icons.call_made,
                             color: Colors.white,
                             size: 19,
                           ),
@@ -268,21 +324,21 @@ class _HomeState extends State<Home> {
                   ],
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 width: 6,
               ),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 30),
+                padding: const EdgeInsets.symmetric(horizontal: 30),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('\$ ${income()}',
-                        style: TextStyle(
+                    Text('${Utils.getCurrencyFormat(entree.amount)}',
+                        style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 17,
                             color: Colors.white)),
-                    Text('\$ ${expenses()}',
-                        style: TextStyle(
+                    Text('${Utils.getCurrencyFormat(depense.amount)}',
+                        style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 17,
                             color: Colors.white)),
@@ -293,6 +349,41 @@ class _HomeState extends State<Home> {
           ),
         )
       ],
+    );
+  }
+
+  Widget errorDialog({required double size}) {
+    return SizedBox(
+      height: 180,
+      width: 200,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'An error occurred when fetching the posts.',
+            style: TextStyle(
+                fontSize: size,
+                fontWeight: FontWeight.w500,
+                color: Colors.black),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          TextButton(
+              onPressed: () {
+                setState(() {
+                  _loading = true;
+                  _error = false;
+                  getSolde();
+                  getTransactions();
+                });
+              },
+              child: const Text(
+                "Retry",
+                style: TextStyle(fontSize: 20, color: Colors.purpleAccent),
+              )),
+        ],
+      ),
     );
   }
 }

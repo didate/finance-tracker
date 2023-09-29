@@ -1,6 +1,5 @@
 import 'package:finance/data/top.dart';
 import 'package:finance/data/utility.dart';
-import 'package:finance/model/add.dart';
 import 'package:finance/widgets/chart.dart';
 import 'package:flutter/material.dart';
 
@@ -22,8 +21,7 @@ class _StatisticsState extends State<Statistics> {
     'saturday',
     'sunday'
   ];
-  List f = [today(), week(), month(), year()];
-  List<AddData> a = [];
+  List f = [];
 
   int indexColor = 0;
   ValueNotifier kj = ValueNotifier(0);
@@ -33,7 +31,6 @@ class _StatisticsState extends State<Statistics> {
       body: SafeArea(
           child: ValueListenableBuilder(
         builder: (context, dynamic value, child) {
-          a = f[value];
           return custom();
         },
         valueListenable: kj,
@@ -162,7 +159,7 @@ class _StatisticsState extends State<Statistics> {
             ],
           ),
         ),
-        SliverList(
+        /* SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
           return ListTile(
             leading: ClipRRect(
@@ -188,7 +185,7 @@ class _StatisticsState extends State<Statistics> {
                   color: a[index].IN == 'Income' ? Colors.red : Colors.green),
             ),
           );
-        }, childCount: a.length))
+        }, childCount: a.length)) */
       ],
     );
   }

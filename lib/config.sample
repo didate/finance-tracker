@@ -1,0 +1,4 @@
+class Config {
+  static const supabaseUrl = 'https://urlbidule.supabase.co';
+  static const supabaseAnnoKey ='machintruc';
+}
