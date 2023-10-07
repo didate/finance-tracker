@@ -14,7 +14,7 @@ class _SettingsState extends State<Settings> {
   Widget build(BuildContext context) {
     List settings = ['Categories', 'Unites'];
     List<IconData> icons = [Icons.category, Icons.ac_unit];
-    List actions = [Categories(), Categories()];
+    List actions = [const Categories(), const Categories()];
 
     return Scaffold(
         backgroundColor: Colors.grey.shade100,

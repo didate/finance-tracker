@@ -15,9 +15,9 @@ class DrawerMenu extends StatelessWidget {
     return ListView(
       children: [
         UserAccountsDrawerHeader(
-          decoration: BoxDecoration(color: Colory.greenLight),
-          accountName: Text("Diallo Mamadou Lamarana"),
-          accountEmail: Text("Lyve.diallo@gmail.com"),
+          decoration: const BoxDecoration(color: Colory.greenLight),
+          accountName: const Text("Diallo Mamadou Lamarana"),
+          accountEmail: const Text("Lyve.diallo@gmail.com"),
           currentAccountPicture: CircleAvatar(
             backgroundImage: NetworkImage(gravatarUrl),
             radius: 30,
@@ -29,7 +29,7 @@ class DrawerMenu extends StatelessWidget {
             leading: const Icon(Icons.category),
             title: const Text("Category"),
             onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (context) => Categories()))),
+                MaterialPageRoute(builder: (context) => const Categories()))),
         ListTile(
             contentPadding:
                 const EdgeInsets.symmetric(vertical: 0.0, horizontal: 10),
@@ -37,9 +37,9 @@ class DrawerMenu extends StatelessWidget {
             title: const Text("Statistics"),
             onTap: () {
               Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => Statistics()));
+                  MaterialPageRoute(builder: (context) => const Statistics()));
             }),
-        Divider(),
+        const Divider(),
         ListTile(
             contentPadding:
                 const EdgeInsets.symmetric(vertical: 0.0, horizontal: 10),
@@ -55,7 +55,7 @@ class DrawerMenu extends StatelessWidget {
     Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (context) => SignIn(),
+          builder: (context) => const SignIn(),
         ),
         (route) => false);
   }

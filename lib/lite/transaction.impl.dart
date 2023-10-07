@@ -1,16 +1,9 @@
-import 'dart:convert';
-
 import 'package:finance/lite/supa.dart';
 import 'package:finance/model/solde.model.dart';
 import 'package:finance/model/transaction.model.dart';
 import 'package:finance/service/transaction.service.dart';
 
 class TransactionImpl extends Supa implements TransactionService {
-  @override
-  void delete(Transaction category) {
-    // TODO: implement delete
-  }
-
   @override
   Future<List<Transaction>> findAll(int page) async {
     try {
@@ -61,6 +54,31 @@ class TransactionImpl extends Supa implements TransactionService {
     } catch (e) {
       print(e);
       throw new UnimplementedError();
+    }
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    try {
+      await client.from('transaction').delete().eq('id', id);
+    } catch (e) {
+      print(e);
+      throw UnimplementedError();
+    }
+  }
+
+  @override
+  Future<Transaction> update(Transaction transaction) async {
+    try {
+      var response =
+          await client.from('transaction').upsert(transaction.toMap()).select();
+      List jsonResponse = response as List;
+      Transaction t =
+          jsonResponse.map((data) => Transaction.fromMap(data)).toList().first;
+      return t;
+    } catch (e) {
+      print(e);
+      throw UnimplementedError();
     }
   }
 }

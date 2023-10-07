@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:finance/lite/supa.dart';
 import 'package:finance/model/category.model.dart';
 import 'package:finance/service/category.service.dart';

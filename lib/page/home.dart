@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:finance/lite/transaction.impl.dart';
 import 'package:finance/model/solde.model.dart';
 import 'package:finance/model/transaction.model.dart';
 import 'package:finance/notifier.dart';
-import 'package:finance/page/transaction.add.dart';
 import 'package:finance/utils.dart';
 import 'package:finance/widgets/menu.dart';
+import 'package:finance/widgets/transactionitem.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gravatar/flutter_gravatar.dart';
 
@@ -28,9 +30,7 @@ class _HomeState extends State<Home> {
   late Solde entree;
 
   late int _pageNumber;
-  final int _numberOfPostsPerRequest = 50;
   late bool _error;
-  late bool _isLastPage;
   late bool _loading;
   late bool _preventCall;
 
@@ -56,9 +56,9 @@ class _HomeState extends State<Home> {
       floatingActionButton: FloatingActionButton(
           backgroundColor: Colory.greenLight,
           foregroundColor: Colors.white,
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => const Add(),
-              )),
+          onPressed: () {
+            Navigator.of(context).pushNamed('/addtransaction');
+          },
           child: const Icon(Icons.add)),
       body: SafeArea(
           child: ValueListenableBuilder(
@@ -77,10 +77,66 @@ class _HomeState extends State<Home> {
                               fontSize: 19,
                               color: Colors.black)),
                     ),
-                    Expanded(child: buildListTransaction()),
+                    Expanded(child: _buildListTransaction()),
                   ],
                 );
               })),
+    );
+  }
+
+  Widget _buildListTransaction() {
+    if (_transactions.isEmpty) {
+      if (_loading) {
+        return const Center(
+            child: Padding(
+          padding: EdgeInsets.all(8),
+          child: CircularProgressIndicator(),
+        ));
+      } else if (_error) {
+        return Center(child: errorDialog(size: 20));
+      }
+    }
+    return ListView.builder(
+        controller: _scrollController,
+        itemCount: _transactions.length,
+        itemBuilder: (context, index) {
+          final transaction = _transactions[index];
+          return TransactionItem(
+            transaction: transaction,
+            onDelete: (context) async {
+              await transactionService.delete(transaction.id!);
+              setState(() {
+                _transactions.removeAt(index);
+              });
+              getSolde();
+            },
+            onEdit: (context) async {
+              await Navigator.of(context)
+                  .pushNamed('/addtransaction', arguments: transaction);
+            },
+          );
+        });
+  }
+
+  Future<bool?> _confirmDeletion(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Remove Transaction"),
+          content:
+              const Text("Are you sure you want to remove this transaction ?"),
+          actions: <Widget>[
+            ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("Yes")),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text("No"),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -96,7 +152,6 @@ class _HomeState extends State<Home> {
     _transactions = [];
     _loading = true;
     _error = false;
-    _isLastPage = false;
     _preventCall = false;
     _scrollController = ScrollController();
 
@@ -106,7 +161,6 @@ class _HomeState extends State<Home> {
       // _scrollController fetches the next paginated data when the current postion of the user on the screen has surpassed
       if (_scrollController.position.pixels > nextPageTrigger) {
         if (!_preventCall) {
-          _loading = true;
           getTransactions();
           setState(() {
             _preventCall = true;
@@ -117,13 +171,18 @@ class _HomeState extends State<Home> {
 
     Notifier.valueNotifier.addListener(
       () {
-        print("notifier");
+        setState(() {
+          _pageNumber = 1;
+          _loading = true;
+          _error = false;
+          _transactions = [];
+        });
         getTransactions();
+        getSolde();
       },
     );
 
     getSolde();
-
     getTransactions();
   }
 
@@ -141,10 +200,8 @@ class _HomeState extends State<Home> {
 
   void getTransactions() async {
     try {
-      print('getTran');
       final operations = await transactionService.findAll(_pageNumber);
       setState(() {
-        _isLastPage = _transactions.length < _numberOfPostsPerRequest;
         _loading = false;
         _pageNumber = _pageNumber + 1;
         _transactions.addAll(operations);
@@ -157,64 +214,6 @@ class _HomeState extends State<Home> {
         _error = true;
       });
     }
-  }
-
-  Widget buildListTransaction() {
-    if (_transactions.isEmpty) {
-      if (_loading) {
-        return const Center(
-            child: Padding(
-          padding: EdgeInsets.all(8),
-          child: CircularProgressIndicator(),
-        ));
-      } else if (_error) {
-        return Center(child: errorDialog(size: 20));
-      }
-    }
-    return ListView.builder(
-        controller: _scrollController,
-        itemCount: _transactions.length, //+ (_isLastPage ? 0 : 1),
-        itemBuilder: (context, index) {
-          final transaction = _transactions[index];
-          return get(transaction);
-        });
-  }
-
-  ListTile get(Transaction transaction) {
-    return ListTile(
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(5),
-        child: transaction.nature == 'ENTREE'
-            ? const Icon(
-                Icons.call_received,
-                color: Colors.green,
-                size: 20,
-              )
-            : const Icon(
-                Icons.call_made,
-                color: Colors.red,
-                size: 20,
-              ),
-      ),
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '${Utils.getCurrencyFormat(transaction.amount)}',
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: transaction.nature == 'DEPENSE'
-                    ? Colors.red
-                    : Colors.green),
-          ),
-          Text(Utils.getDate(transaction.createdAt!)),
-        ],
-      ),
-      subtitle: Text(
-        transaction.description!,
-      ),
-    );
   }
 
   Widget _head() {

@@ -1,6 +1,4 @@
 import 'package:finance/colory.dart';
-import 'package:finance/data/top.dart';
-import 'package:finance/data/utility.dart';
 import 'package:finance/widgets/chart.dart';
 import 'package:flutter/material.dart';
 

@@ -1,5 +1,9 @@
 import 'package:finance/config.dart';
+import 'package:finance/page/category.list.dart';
+import 'package:finance/page/home.dart';
+import 'package:finance/page/signin.dart';
 import 'package:finance/page/splash.dart';
+import 'package:finance/page/transaction.add.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -26,7 +30,14 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colory.greenLight),
         useMaterial3: true,
       ),
-      home: const Splash(),
+      initialRoute: '/',
+      routes: <String, WidgetBuilder>{
+        '/': (_) => const Splash(),
+        '/signin': (_) => const SignIn(),
+        '/home': (_) => const Home(),
+        '/addtransaction': (_) => const Add(),
+        '/category': (_) => const Categories(),
+      },
     );
   }
 }

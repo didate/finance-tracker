@@ -32,17 +32,22 @@ class _AddState extends State<Add> {
     'DEPENSE',
   ];
 
-  bool _loadingMetaData = false;
   bool _saving = false;
 
   List<Category> categories = [];
 
   TransactionService transactionService = TransactionImpl();
+  late Transaction transaction;
 
   @override
   void initState() {
     super.initState();
     _loadMetaData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   final categoryService = CategoryImpl();
@@ -52,12 +57,21 @@ class _AddState extends State<Add> {
   }
 
   _loadMetaData() async {
-    setState(() {
-      _loadingMetaData = true;
-    });
     categories = await getCategories();
+
+    transaction = ModalRoute.of(context)!.settings.arguments as Transaction;
+    print(transaction);
     setState(() {
-      _loadingMetaData = false;
+      if (transaction != null) {
+        amountCtrl.text = '${transaction.amount}';
+        motifCtrl.text = '${transaction.description}';
+        selectedNature = transaction.nature;
+        if (categories.isNotEmpty) {
+          selectedCategory = categories
+              .where((element) => element.id == transaction.categoryId)
+              .first;
+        }
+      }
     });
   }
 
@@ -129,7 +143,7 @@ class _AddState extends State<Add> {
         setState(() {
           _saving = true;
         });
-        var transaction = Transaction(
+        var t = Transaction(
             amount: int.parse(amountCtrl.text),
             categoryId: selectedNature == 'DEPENSE'
                 ? selectedCategory?.id
@@ -137,18 +151,23 @@ class _AddState extends State<Add> {
             nature: selectedNature!,
             description: motifCtrl.text,
             version: 1);
-        transaction = await transactionService.save(transaction);
+        if (transaction.id == null) {
+          t = await transactionService.save(t);
+        } else {
+          t.id = transaction.id;
+          t.version = transaction.version++;
+          t = await transactionService.update(t);
+        }
 
         setState(() {
           _saving = false;
         });
-        // Notifier.insert(transaction);
 
         Notifier.increment();
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(t);
       },
       child: _saving
-          ? CircularProgressIndicator()
+          ? const CircularProgressIndicator()
           : Container(
               alignment: Alignment.center,
               decoration: BoxDecoration(

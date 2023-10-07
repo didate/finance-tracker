@@ -1,6 +1,3 @@
-import 'package:finance/page/home.dart';
-import 'package:finance/page/signin.dart';
-import 'package:finance/widgets/bottomnavigationbar.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -28,11 +25,9 @@ class _SplashState extends State<Splash> {
 
     final session = supabase.auth.currentSession;
     if (session != null) {
-      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const Home()));
+      Navigator.of(context).pushReplacementNamed('/home');
     } else {
-      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const SignIn()));
+      Navigator.of(context).pushReplacementNamed('/signin');
     }
   }
 

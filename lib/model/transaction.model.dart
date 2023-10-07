@@ -47,13 +47,11 @@ class Transaction {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
-      'created_at': createdAt?.millisecondsSinceEpoch,
       'amount': amount,
       'nature': nature,
       'description': description,
       'version': version,
       'category_id': categoryId,
-      'category': category,
     };
   }
 

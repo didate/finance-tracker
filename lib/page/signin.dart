@@ -1,4 +1,3 @@
-import 'package:finance/widgets/bottomnavigationbar.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -52,7 +51,7 @@ class _SignInState extends State<SignIn> {
                   style: TextStyle(fontSize: 16),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               TextFormField(
@@ -60,7 +59,7 @@ class _SignInState extends State<SignIn> {
                 decoration: const InputDecoration(
                     border: OutlineInputBorder(), labelText: 'Email'),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               TextFormField(
@@ -69,7 +68,7 @@ class _SignInState extends State<SignIn> {
                 decoration: const InputDecoration(
                     border: OutlineInputBorder(), labelText: 'Password'),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               SizedBox(
@@ -89,11 +88,7 @@ class _SignInState extends State<SignIn> {
                             isLoading = false;
                           });
                           if (loginResult != null) {
-                            Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => Bottom()),
-                                (route) => false);
+                            Navigator.of(context).pushReplacementNamed('/home');
                           } else {
                             /* context
                                 .showErrorMessage('Invalid email or password'); */
@@ -105,7 +100,7 @@ class _SignInState extends State<SignIn> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               SizedBox(
