@@ -22,7 +22,8 @@ class Utils {
     String value = '';
 
     if (isToday(date)) {
-      value = _timeFormat.format(date);
+      value = 'Today';
+      // _timeFormat.format(date);
     } else if (isThisWeek(date)) {
       value = day[date.weekday - 1];
     } else if (isThisYear(date)) {

@@ -4,22 +4,24 @@ import 'dart:convert';
 class Transaction {
   String? id;
   DateTime? createdAt;
-  int amount;
-  String nature;
+  int? amount;
+  String? nature;
   String? description;
-  int version;
+  int? version;
   String? categoryId;
   String? category;
+  String? dateHeader;
 
   Transaction({
     this.id,
     this.createdAt,
-    required this.amount,
-    required this.nature,
+    this.amount,
+    this.nature,
     this.description,
-    required this.version,
+    this.version,
     this.categoryId,
     this.category,
+    this.dateHeader,
   });
 
   Transaction copyWith({

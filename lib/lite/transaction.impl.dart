@@ -2,6 +2,7 @@ import 'package:finance/lite/supa.dart';
 import 'package:finance/model/solde.model.dart';
 import 'package:finance/model/transaction.model.dart';
 import 'package:finance/service/transaction.service.dart';
+import 'package:finance/utils.dart';
 
 class TransactionImpl extends Supa implements TransactionService {
   @override
@@ -15,8 +16,21 @@ class TransactionImpl extends Supa implements TransactionService {
           .select()
           .order('created_at', ascending: false)
           .range(from, to);
+
       List jsonResponse = response as List;
-      return jsonResponse.map((data) => Transaction.fromMap(data)).toList();
+      List<Transaction> transactions = [];
+      for (var i = 0; i < jsonResponse.length; i++) {
+        Transaction t = Transaction.fromMap(jsonResponse[i]);
+        if (i == 0 ||
+            Utils.getDate(
+                    Transaction.fromMap(jsonResponse[i - 1]).createdAt!) !=
+                Utils.getDate(t.createdAt!)) {
+          transactions
+              .add(Transaction(dateHeader: Utils.getDate(t.createdAt!)));
+        }
+        transactions.add(t);
+      }
+      return transactions; //jsonResponse.map((data) => Transaction.fromMap(data)).toList();
     } catch (e) {
       throw new UnimplementedError();
     }

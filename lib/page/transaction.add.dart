@@ -58,11 +58,14 @@ class _AddState extends State<Add> {
 
   _loadMetaData() async {
     categories = await getCategories();
+    transaction = Transaction();
+    if (ModalRoute.of(context)!.settings.arguments != null) {
+      transaction = ModalRoute.of(context)!.settings.arguments as Transaction;
+    }
 
-    transaction = ModalRoute.of(context)!.settings.arguments as Transaction;
     print(transaction);
     setState(() {
-      if (transaction != null) {
+      if (transaction.id != null) {
         amountCtrl.text = '${transaction.amount}';
         motifCtrl.text = '${transaction.description}';
         selectedNature = transaction.nature;
@@ -155,7 +158,7 @@ class _AddState extends State<Add> {
           t = await transactionService.save(t);
         } else {
           t.id = transaction.id;
-          t.version = transaction.version++;
+          t.version = transaction.version! + 1;
           t = await transactionService.update(t);
         }
 

@@ -101,6 +101,11 @@ class _HomeState extends State<Home> {
         itemCount: _transactions.length,
         itemBuilder: (context, index) {
           final transaction = _transactions[index];
+
+          if (transaction.dateHeader != null) {
+            return tileHeader(transaction.dateHeader!);
+          }
+
           return TransactionItem(
             transaction: transaction,
             onDelete: (context) async {
@@ -116,6 +121,23 @@ class _HomeState extends State<Home> {
             },
           );
         });
+  }
+
+  Widget tileHeader(String header) {
+    return Container(
+      color: Colors.grey.shade200,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            header,
+            style: const TextStyle(
+                color: Colors.black, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<bool?> _confirmDeletion(BuildContext context) {
@@ -230,9 +252,6 @@ class _HomeState extends State<Home> {
                   borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(20),
                       bottomRight: Radius.circular(20))),
-              child: const Stack(
-                children: [],
-              ),
             ),
           ],
         ),

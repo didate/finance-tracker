@@ -1,6 +1,4 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
@@ -44,7 +42,7 @@ class TransactionItem extends StatelessWidget {
     );
   }
 
-  ListTile _item(Transaction transaction) {
+  Widget _item(Transaction transaction) {
     return ListTile(
       shape: const RoundedRectangleBorder(
         side: BorderSide(color: Colors.grey, width: 0.1),
@@ -66,21 +64,29 @@ class TransactionItem extends StatelessWidget {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            '${Utils.getCurrencyFormat(transaction.amount)}',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text(
+                '${transaction.category}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Visibility(
+                  visible: transaction.description != '',
+                  child: Text(
+                    transaction.description!,
+                    style: const TextStyle(fontSize: 12),
+                  ))
+            ],
           ),
           Text(
-            Utils.getDate(transaction.createdAt!),
-            style: TextStyle(fontSize: 14),
+            Utils.getCurrencyFormat(transaction.amount!),
+            style: const TextStyle(fontSize: 14),
           ),
         ],
-      ),
-      subtitle: Text(
-        transaction.description!,
       ),
     );
   }
